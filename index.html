@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Liczenie alkoholu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-100 p-6">
+
+  <div class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow">
+    <h1 class="text-2xl font-bold mb-4">Liczenie alkoholu</h1>
+
+    <!-- Wyszukiwarka i dodawanie -->
+    <div class="mb-4">
+      <div class="flex gap-2">
+        <input id="searchInput" type="text" placeholder="Wpisz alkohol..." class="border rounded p-2 w-full" />
+        <input id="qtyInput" type="number" min="1" placeholder="Ilość" class="border rounded p-2 w-24" />
+        <button id="addBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Dodaj</button>
+      </div>
+      <ul id="suggestions" class="border mt-1 rounded hidden bg-white shadow"></ul>
+    </div>
+
+    <!-- Przycisk -->
+    <button id="showSummary" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+      Pokaż podsumowanie
+    </button>
+
+    <!-- Wynik -->
+    <div id="summary" class="mt-6 hidden">
+      <h2 class="text-xl font-semibold mb-2">Podsumowanie</h2>
+      <ul id="summaryList" class="list-disc pl-5 text-gray-700"></ul>
+      <p id="total" class="mt-3 font-bold text-lg"></p>
+    </div>
+  </div>
+
+  <script>
+    const alcohols = [
+      "Eisberg Sauvignon Blanc","Ferejean","Jean de la fontane","Val d oca Prosecco Brut","Solaris Białe Skały",
+      "Twin Vines Verde","Crama Regala Chardonnay","Hugel","Solaris X","Lipowiec","Malborough Sun",
+      "Szlachetny Zbiór turnau","Purcari Freedom Blend","Vinaria Din Vale Feteasca Neagra","Almarosa Primitivo",
+      "The Gaucho","Finca Museum Crianza","Kendermann Pinot Noir","Sexton","Famous Grouse","Bushmills",
+      "Buffalo Trace Bourbon","Gautier VS Cognac","Soberano Reserva 5YO","Kraken","Porto LBV Grahams",
+      "Gunpowder","Gibson's London Dry","J.A Baczewski Monopolowa","J.A Baczewski Morelówka","J.A Baczewski Wiśniówka",
+      "Krupnik Cappucino","Krupnik pistacja","Bottega Fior de Latte","Carolans","Martini Bianco","Cydr",
+      "Żywiec","Heineken","Iquana","Trybunał Export","Trybunał 0%","Trybunał 0% Lemon"
+    ];
+
+    const data = {};
+
+    const searchInput = document.getElementById("searchInput");
+    const suggestions = document.getElementById("suggestions");
+
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value.toLowerCase();
+      suggestions.innerHTML = "";
+
+      if (!query) {
+        suggestions.classList.add("hidden");
+        return;
+      }
+
+      const matches = alcohols.filter(a => a.toLowerCase().includes(query));
+
+      if (matches.length === 0) {
+        suggestions.classList.add("hidden");
+        return;
+      }
+
+      matches.forEach(match => {
+        const li = document.createElement("li");
+        li.textContent = match;
+        li.className = "p-2 hover:bg-gray-200 cursor-pointer";
+        li.addEventListener("click", () => {
+          searchInput.value = match;
+          suggestions.classList.add("hidden");
+        });
+        suggestions.appendChild(li);
+      });
+
+      suggestions.classList.remove("hidden");
+    });
+
+    document.getElementById("addBtn").addEventListener("click", () => {
+      const name = searchInput.value.trim();
+      const qty = parseInt(document.getElementById("qtyInput").value) || 0;
+
+      if (!name || qty <= 0) return;
+
+      data[name] = (data[name] || 0) + qty;
+
+      searchInput.value = "";
+      document.getElementById("qtyInput").value = "";
+      suggestions.classList.add("hidden");
+    });
+
+    document.getElementById("showSummary").addEventListener("click", () => {
+      const summaryList = document.getElementById("summaryList");
+      const totalEl = document.getElementById("total");
+
+      summaryList.innerHTML = "";
+      let total = 0;
+
+      alcohols.forEach(name => {
+        const qty = data[name] || 0;
+        const li = document.createElement("li");
+        li.textContent = `${name} – ${qty} szt`;
+        summaryList.appendChild(li);
+        total += qty;
+      });
+
+      totalEl.textContent = "Łącznie: " + total + " szt";
+      document.getElementById("summary").classList.remove("hidden");
+    });
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+</body>
+</html>
