@@ -22,12 +22,17 @@
     </div>
 
     <!-- Przycisk -->
-    <button id="showSummary" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-      Pokaż podsumowanie
-    </button>
+    <div class="flex gap-2 mb-4">
+      <button id="showSummary" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+        Pokaż podsumowanie
+      </button>
+      <button id="clearData" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+        Wyczyść dane
+      </button>
+    </div>
 
     <!-- Wynik -->
-    <div id="summary" class="mt-6 hidden">
+    <div id="summary" class="mt-6">
       <h2 class="text-xl font-semibold mb-2">Podsumowanie</h2>
       <ul id="summaryList" class="list-disc pl-5 text-gray-700"></ul>
       <p id="total" class="mt-3 font-bold text-lg"></p>
@@ -46,10 +51,14 @@
       "Żywiec","Heineken","Iquana","Trybunał Export","Trybunał 0%","Trybunał 0% Lemon"
     ];
 
-    const data = {};
+    let data = JSON.parse(localStorage.getItem('alcoholData') || '{}');
 
     const searchInput = document.getElementById("searchInput");
     const suggestions = document.getElementById("suggestions");
+
+    function saveData() {
+      localStorage.setItem('alcoholData', JSON.stringify(data));
+    }
 
     searchInput.addEventListener("input", () => {
       const query = searchInput.value.toLowerCase();
@@ -88,13 +97,15 @@
       if (!name || qty <= 0) return;
 
       data[name] = (data[name] || 0) + qty;
+      saveData();
 
       searchInput.value = "";
       document.getElementById("qtyInput").value = "";
       suggestions.classList.add("hidden");
+      showSummary();
     });
 
-    document.getElementById("showSummary").addEventListener("click", () => {
+    function showSummary() {
       const summaryList = document.getElementById("summaryList");
       const totalEl = document.getElementById("total");
 
@@ -110,8 +121,19 @@
       });
 
       totalEl.textContent = "Łącznie: " + total + " szt";
-      document.getElementById("summary").classList.remove("hidden");
+    }
+
+    document.getElementById("showSummary").addEventListener("click", showSummary);
+
+    document.getElementById("clearData").addEventListener("click", () => {
+      // Usunięcie danych bez confirm() z powodu sandboxu
+      localStorage.clear();
+      data = {};
+      showSummary();
     });
+
+    // Pokaz podsumowanie przy ładowaniu strony
+    showSummary();
   </script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
