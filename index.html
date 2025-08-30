@@ -1,46 +1,63 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Liczenie alkoholu</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+  <style>
+    /* mobile fixes */
+    .item-row { gap: .5rem; }
+    .item-name { max-width: 60%; }
+    /* zapobiega zoomowi na iOS/Android — INPUT musi mieć >=16px */
+    input.counter-input { font-size: 16px; -webkit-text-size-adjust: 100%; }
+    /* tabela responsywna */
+    .table-wrap { overflow-x: auto; }
+    /* upewnij się, że panel akordeonu będzie zawsze jasny */
+    .accordion-panel, #accordion [data-accordion-target], #accordion h2 button { background-color: #fff !important; color: #111827 !important; }
+    .accordion-panel * { background-color: inherit !important; color: inherit !important; }
+    /* usuń outline i shadow na focus */
+    button:focus, input:focus { outline: none !important; box-shadow: none !important; }
+    /* zapobiega potrójnym/syntetycznym kliknięciom na mobile */
+    .dec-btn, .inc-btn { touch-action: manipulation; -ms-touch-action: manipulation; }
+  </style>
 </head>
-<body class="bg-gray-100 p-6">
+<body class="bg-gray-100 p-4">
+  <div class="max-w-md mx-auto bg-white p-4 rounded-lg shadow">
+    <h1 class="text-2xl font-bold mb-4 text-center">Liczenie alkoholu</h1>
 
-  <div class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow">
-    <h1 class="text-2xl font-bold mb-4">Liczenie alkoholu</h1>
+    <!-- Akordeon (Flowbite) -->
+    <div id="accordion" data-accordion="collapse" class="divide-y divide-gray-200"></div>
 
-    <!-- Wyszukiwarka i dodawanie -->
-    <div class="mb-4">
-      <div class="flex gap-2">
-        <input id="searchInput" type="text" placeholder="Wpisz alkohol..." class="border rounded p-2 w-full" />
-        <input id="qtyInput" type="number" min="1" placeholder="Ilość" class="border rounded p-2 w-24" />
-        <button id="addBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Dodaj</button>
-      </div>
-      <ul id="suggestions" class="border mt-1 rounded hidden bg-white shadow"></ul>
+    <!-- SUMA całkowita (tabela) -->
+    <div class="mt-6 table-wrap">
+      <h2 class="text-xl font-semibold mb-2">PODSUMOWANIE</h2>
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-3 py-2 text-left font-medium">Alkohol</th>
+            <th class="px-3 py-2 text-right font-medium">Łącznie</th>
+          </tr>
+        </thead>
+        <tbody id="total-tbody" class="bg-white divide-y divide-gray-100"></tbody>
+      </table>
     </div>
 
-    <!-- Przycisk -->
-    <div class="flex gap-2 mb-4">
-      <button id="showSummary" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-        Pokaż podsumowanie
-      </button>
-      <button id="clearData" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
-        Wyczyść dane
-      </button>
-    </div>
-
-    <!-- Wynik -->
-    <div id="summary" class="mt-6">
-      <h2 class="text-xl font-semibold mb-2">Podsumowanie</h2>
-      <ul id="summaryList" class="list-disc pl-5 text-gray-700"></ul>
-      <p id="total" class="mt-3 font-bold text-lg"></p>
-    </div>
+    <button id="clearStorage" class="mt-6 w-full px-4 py-2 bg-red-600 text-white rounded-lg">Wyczyść dane</button>
   </div>
 
   <script>
-    const alcohols = [
+    // ---- Dane ----
+    const locations = [
+      "Bar 0",
+      "Bar 2",
+      "Gold",
+      "Bar Alkoholowy",
+      "Pomieszczenie koordynatorskie"
+    ];
+
+    const items = [
       "Eisberg Sauvignon Blanc","Ferejean","Jean de la fontane","Val d oca Prosecco Brut","Solaris Białe Skały",
       "Twin Vines Verde","Crama Regala Chardonnay","Hugel","Solaris X","Lipowiec","Malborough Sun",
       "Szlachetny Zbiór turnau","Purcari Freedom Blend","Vinaria Din Vale Feteasca Neagra","Almarosa Primitivo",
@@ -51,91 +68,125 @@
       "Żywiec","Heineken","Iquana","Trybunał Export","Trybunał 0%","Trybunał 0% Lemon"
     ];
 
-    let data = JSON.parse(localStorage.getItem('alcoholData') || '{}');
+    let data = JSON.parse(localStorage.getItem("alcoData")) || {};
 
-    const searchInput = document.getElementById("searchInput");
-    const suggestions = document.getElementById("suggestions");
+    function saveData() { localStorage.setItem("alcoData", JSON.stringify(data)); }
 
-    function saveData() {
-      localStorage.setItem('alcoholData', JSON.stringify(data));
+    // SUMA całkowita — wypełnia tbody tabeli
+    function updateTotal() {
+      const tbody = document.getElementById('total-tbody');
+      tbody.innerHTML = '';
+      items.forEach(item => {
+        let sum = 0;
+        locations.forEach(loc => { sum += (data[loc]?.[item] || 0); });
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-3 py-2 text-sm">${item}</td>
+          <td class="px-3 py-2 text-sm text-right">${sum}</td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
-    searchInput.addEventListener("input", () => {
-      const query = searchInput.value.toLowerCase();
-      suggestions.innerHTML = "";
+    // Budowanie akordeonu z licznikami (bez Flowbite counter attributes, unikamy konfliktów)
+    function renderAccordion() {
+      const accordion = document.getElementById('accordion');
+      accordion.innerHTML = '';
 
-      if (!query) {
-        suggestions.classList.add("hidden");
-        return;
-      }
+      locations.forEach((loc, i) => {
+        if (!data[loc]) data[loc] = {};
 
-      const matches = alcohols.filter(a => a.toLowerCase().includes(query));
+        const itemId = `loc-${i}`;
+        const section = document.createElement('div');
+        section.className = 'py-1';
+        section.innerHTML = `
+          <h2 id="heading-${i}">
+            <button type="button" class="flex w-full items-center justify-between p-3 text-left font-medium" data-accordion-target="#${itemId}" aria-expanded="false" aria-controls="${itemId}">
+              <span>${loc}</span>
+              <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+          </h2>
+          <div id="${itemId}" class="hidden p-2 accordion-panel" aria-labelledby="heading-${i}">
+            <ul class="space-y-2"></ul>
+          </div>`;
 
-      if (matches.length === 0) {
-        suggestions.classList.add("hidden");
-        return;
-      }
+        accordion.appendChild(section);
+        const list = section.querySelector('ul');
 
-      matches.forEach(match => {
-        const li = document.createElement("li");
-        li.textContent = match;
-        li.className = "p-2 hover:bg-gray-200 cursor-pointer";
-        li.addEventListener("click", () => {
-          searchInput.value = match;
-          suggestions.classList.add("hidden");
+        items.forEach((item, j) => {
+          if (typeof data[loc][item] !== 'number') data[loc][item] = 0;
+          const inputId = `q-${i}-${j}`;
+
+          const li = document.createElement('li');
+          li.className = 'item-row flex items-center justify-between';
+          li.innerHTML = `
+            <span class="item-name text-sm">${item}</span>
+            <div class="relative flex items-center max-w-[8rem]">
+              <button type="button" data-dec="${inputId}" class="dec-btn bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-s-lg p-3 h-11 focus:ring-gray-100 focus:ring-2 focus:outline-none" aria-label="decrement-${inputId}">
+                <svg class="w-3 h-3 text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h16"/></svg>
+              </button>
+              <input type="text" inputmode="numeric" pattern="[0-9]*" id="${inputId}" class="counter-input bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-base block w-16 py-2.5" value="${data[loc][item]}">
+              <button type="button" data-inc="${inputId}" class="inc-btn bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-e-lg p-3 h-11 focus:ring-gray-100 focus:ring-2 focus:outline-none" aria-label="increment-${inputId}">
+                <svg class="w-3 h-3 text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 1v16M1 9h16"/></svg>
+              </button>
+            </div>`;
+
+          const decBtn = li.querySelector(`[data-dec="${inputId}"]`);
+          const incBtn = li.querySelector(`[data-inc="${inputId}"]`);
+          const inputEl = li.querySelector('input');
+
+          // listener dla dec (pointerdown, preventDefault żeby uniknąć dubli na mobile)
+          decBtn.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const current = Number(inputEl.value) || 0;
+            const val = Math.max(0, current - 1);
+            inputEl.value = val;
+            data[loc][item] = val;
+            saveData();
+            updateTotal();
+          });
+
+          // listener dla inc
+          incBtn.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const current = Number(inputEl.value) || 0;
+            const val = current + 1;
+            inputEl.value = val;
+            data[loc][item] = val;
+            saveData();
+            updateTotal();
+          });
+
+          // listener dla ręcznego wpisu
+          inputEl.addEventListener('input', (e) => {
+            const val = Math.max(0, Number(e.target.value) || 0);
+            e.target.value = val;
+            data[loc][item] = val;
+            saveData();
+            updateTotal();
+          });
+
+          list.appendChild(li);
         });
-        suggestions.appendChild(li);
       });
 
-      suggestions.classList.remove("hidden");
-    });
-
-    document.getElementById("addBtn").addEventListener("click", () => {
-      const name = searchInput.value.trim();
-      const qty = parseInt(document.getElementById("qtyInput").value) || 0;
-
-      if (!name || qty <= 0) return;
-
-      data[name] = (data[name] || 0) + qty;
-      saveData();
-
-      searchInput.value = "";
-      document.getElementById("qtyInput").value = "";
-      suggestions.classList.add("hidden");
-      showSummary();
-    });
-
-    function showSummary() {
-      const summaryList = document.getElementById("summaryList");
-      const totalEl = document.getElementById("total");
-
-      summaryList.innerHTML = "";
-      let total = 0;
-
-      alcohols.forEach(name => {
-        const qty = data[name] || 0;
-        const li = document.createElement("li");
-        li.textContent = `${name} – ${qty} szt`;
-        summaryList.appendChild(li);
-        total += qty;
-      });
-
-      totalEl.textContent = "Łącznie: " + total + " szt";
+      updateTotal();
     }
 
-    document.getElementById("showSummary").addEventListener("click", showSummary);
+    document.addEventListener('DOMContentLoaded', () => { renderAccordion(); });
 
-    document.getElementById("clearData").addEventListener("click", () => {
-      // Usunięcie danych bez confirm() z powodu sandboxu
-      localStorage.clear();
+    document.getElementById('clearStorage').addEventListener('click', () => {
+      localStorage.removeItem('alcoData');
       data = {};
-      showSummary();
+      renderAccordion();
     });
-
-    // Pokaz podsumowanie przy ładowaniu strony
-    showSummary();
   </script>
 
+  <!-- Flowbite (używamy tylko akordeonu z Flowbite) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
 </body>
 </html>
