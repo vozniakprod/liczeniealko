@@ -44,15 +44,61 @@
   <script>
     const locations = ["Bar 0","Bar 2","Gold","Bar Alkoholowy","Pomieszczenie koordynatorskie"];
     const items = [
-      "Eisberg Sauvignon Blanc","Ferejean","Jean de la fontane","Val d oca Prosecco Brut","Solaris Białe Skały",
-      "Twin Vines Verde","Crama Regala Chardonnay","Hugel","Solaris X","Lipowiec","Malborough Sun",
-      "Szlachetny Zbiór turnau","Purcari Freedom Blend","Vinaria Din Vale Feteasca Neagra","Almarosa Primitivo",
-      "The Gaucho","Finca Museum Crianza","Kendermann Pinot Noir","Sexton","Famous Grouse","Bushmills",
-      "Buffalo Trace Bourbon","Gautier VS Cognac","Soberano Reserva 5YO","Kraken","Porto LBV Grahams",
-      "Gunpowder","Gibson's London Dry","J.A Baczewski Monopolowa","J.A Baczewski Morelówka","J.A Baczewski Wiśniówka",
-      "Krupnik Cappucino","Krupnik pistacja","Bottega Fior de Latte","Carolans","Martini Bianco","Cydr",
-      "Żywiec","Heineken","Iquana","Trybunał Export","Trybunał 0%","Trybunał 0% Lemon"
-    ];
+  "Eisberg Sauvignon Blanc",
+  "Ferejean",
+  "Jean de la fontane",
+  "Val d oca Prosecco Brut",
+  "Solaris Białe Skały",
+  "Twin Vines Verde",
+  "Crama Regala Chardonnay",
+  "Hugel",
+  "Solaris X",
+  "Lipowiec",
+  "Malborough Sun",
+  "Szlachetny Zbiór turnau",
+  "Purcari Freedom Blend",
+  "Vinaria Din Vale Feteasca Neagra",
+  "Almarosa Primitivo",
+  "The Gaucho",
+  "Finca Museum Crianza",
+  "Kendermann Pinot Noir",
+  "Sexton",
+  "Soutern Comfort",
+  "Famous Grouse",
+  "Famous Grouse Ruby",
+  "Loch Lomond Original Single Malt",
+  "Glen Moray 12yo",
+  "Bushmills 10yo",
+  "Bushmills",
+  "Evan Williams",
+  "Buffalo Trace Bourbon",
+  "Gautier VS Cognac",
+  "Soberano Reserva 5YO",
+  "Jose Cuervo Reposado Gold",
+  "Jose Cuervo Silver",
+  "Kraken",
+  "Negrita White",
+  "Porto LBV Grahams",
+  "Gunpowder",
+  "Gibson's London Dry",
+  "J.A Baczewski Monopolowa",
+  "J.A Baczewski Morelówka",
+  "J.A Baczewski Wiśniówka",
+  "Krupnik Cappucino",
+  "Krupnik pistacja",
+  "Bottega Fior de Latte",
+  "Bottega Bitter",
+  "Carolans",
+  "Martini Bianco",
+  "Cydr",
+  "Żywiec",
+  "Heineken",
+  "Iquana",
+  "Trybunał Export",
+  "Trybunał 0%",
+  "Trybunał 0% Lemon"
+];
+
 
     let data = JSON.parse(localStorage.getItem("alcoData")) || {};
     function saveData() { localStorage.setItem("alcoData", JSON.stringify(data)); }
@@ -117,3 +163,4 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
 </body>
 </html>
+
