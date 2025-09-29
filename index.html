@@ -1,175 +1,491 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Liczenie alkoholu</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .item-row { gap: .5rem; }
-    .item-name { max-width: 60%; }
-    input.counter-input { font-size: 16px; }
-    .table-wrap { overflow-x: auto; }
-    button:focus, input:focus { outline: none !important; box-shadow: none !important; }
-    .dec-btn, .inc-btn { touch-action: manipulation; -ms-touch-action: manipulation; }
-    input.counter-input::-webkit-outer-spin-button, input.counter-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    .modal-bg { background: rgba(0,0,0,0.5); position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
-    .modal { background: #fff; padding: 1rem; border-radius: 0.5rem; max-height: 80vh; overflow-y: auto; width: 90%; max-width: 400px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liczenie Alko</title>
+    <!-- Ładowanie Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Konfiguracja czcionki Inter i globalne style */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Ciemne tło główne */
+            color: #e5e7eb; /* Jasny tekst (Cream/Off-White) */
+        }
+        /* Ukrycie standardowych strzałek w polach numerycznych */
+        input[type="text"].counter-input::-webkit-outer-spin-button,
+        input[type="text"].counter-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="text"].counter-input {
+            -moz-appearance: textfield;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-align: center;
+        }
+        /* Styl dla przycisków licznika */
+        .count-btn {
+            transition: all 0.1s;
+            flex-shrink: 0;
+            user-select: none;
+        }
+        .count-btn:active {
+            transform: scale(0.98);
+        }
+        /* Styl dla akordeonu */
+        .accordion-header {
+            background-color: #1f2937;
+            border-bottom: 1px solid #374151;
+            transition: background-color 0.2s;
+        }
+        .accordion-header:hover {
+            background-color: #2a3442;
+        }
+        .item-row { 
+            border-bottom: 1px dashed #374151;
+            padding: 0.5rem 0;
+        }
+        .modal-bg {
+            background: rgba(0,0,0,0.8);
+            position: fixed;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+        .modal {
+            background: #1f2937;
+            border: 1px solid #374151;
+        }
+        .item-name { 
+             /* Utrzymaj max-width, aby nazwa nie rozpychała się na szerokość licznika */
+             max-width: 50%;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 p-4">
-  <div class="max-w-md mx-auto bg-white p-4 rounded-lg shadow">
-    <h1 class="text-2xl font-bold mb-4 text-center">Liczenie alkoholu</h1>
+<body class="bg-gray-900 p-4">
 
-    <div class="flex justify-between mb-2">
-      <button id="openSettings" class="px-3 py-2 bg-gray-600 text-white rounded">Ustawienia</button>
+    <!-- Główny Kontener -->
+    <div id="app-container" class="max-w-md mx-auto bg-gray-800 p-4 rounded-xl shadow-2xl border border-gray-700">
+        
+        <!-- NAGŁÓWEK -->
+        <!-- Zmiana koloru akcentu na Królewski Błękit -->
+        <h1 class="text-3xl font-extrabold mb-4 text-center text-blue-500">Liczenie Alko</h1>
+
+        <!-- Kontrola (Ustawienia, Kopiowanie, Wyczyść) -->
+        <div class="flex flex-col space-y-3 mb-4">
+            <div class="flex justify-between space-x-3">
+                <!-- Zmiana koloru ustawień na głęboki Teal -->
+                <button id="openSettings" class="flex-1 px-4 py-2 bg-teal-700 text-white font-semibold rounded-lg shadow-md hover:bg-teal-800 transition duration-150">
+                    <svg class="w-5 h-5 inline-block mr-1 -mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" /></svg>
+                    Ustawienia
+                </button>
+                <!-- Zmiana koloru kopiowania na Królewski Błękit -->
+                <button id="copyNumbers" class="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-150">
+                    <svg class="w-5 h-5 inline-block mr-1 -mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0l-4.5 4.5M21 3v4.5M21 3h-4.5" /></svg>
+                    Kopiuj Sumę
+                </button>
+            </div>
+            
+            <!-- Akordeon Liczenia -->
+            <div id="accordion" class="divide-y divide-gray-700 rounded-lg overflow-hidden border border-gray-700 shadow-inner"></div>
+
+        </div>
+
+        <!-- PODSUMOWANIE -->
+        <!-- Zmiana koloru ramki i nagłówka na Błękit Królewski -->
+        <div class="mt-6 p-4 bg-gray-700 rounded-xl shadow-inner border border-blue-500/50">
+            <h2 class="text-xl font-bold mb-3 text-blue-500">PODSUMOWANIE CAŁKOWITE</h2>
+            <div class="table-wrap">
+                <table class="min-w-full divide-y divide-gray-600 text-sm">
+                    <thead class="bg-gray-900/50">
+                        <tr>
+                            <th class="px-3 py-2 text-left font-medium text-gray-400 rounded-tl-lg">Alkohol</th>
+                            <th class="px-3 py-2 text-right font-medium text-gray-400 rounded-tr-lg">Łącznie</th>
+                        </tr>
+                    </thead>
+                    <tbody id="total-tbody" class="divide-y divide-gray-700"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Przycisk Wyczyść -->
+        <!-- Kolor Czerwony pozostaje, aby zachować ostrzegawczy charakter -->
+        <button id="clearStorageBtn" class="mt-6 w-full px-4 py-3 bg-red-700 text-white font-bold rounded-lg shadow-xl hover:bg-red-800 transition duration-150">
+            <svg class="w-5 h-5 inline-block mr-1 -mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.93a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.56 48.56 0 0 0-4.544-.45 48.44 48.44 0 0 0-6.417 0m.758 3.548 1.48 4.72.63-4.72a.75.75 0 0 0-1.48-.12Z" /></svg>
+            Wyczyść WSZYSTKIE dane
+        </button>
     </div>
 
-    <div id="accordion" class="divide-y divide-gray-200"></div>
-
-    <div class="mt-6 table-wrap">
-      <h2 class="text-xl font-semibold mb-2">PODSUMOWANIE</h2>
-      <table class="min-w-full divide-y divide-gray-200 text-sm">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-3 py-2 text-left font-medium">Alkohol</th>
-            <th class="px-3 py-2 text-right font-medium">Łącznie</th>
-          </tr>
-        </thead>
-        <tbody id="total-tbody" class="bg-white divide-y divide-gray-100"></tbody>
-      </table>
-      <button id="copyNumbers" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg">Kopiuj liczby do Excela</button>
+    <!-- Modale i Komunikaty -->
+    
+    <!-- 1. Settings modal -->
+    <div id="settingsModal" class="modal-bg hidden">
+        <div class="modal rounded-xl shadow-2xl p-6">
+            <h2 class="text-xl font-bold mb-4 text-white border-b border-gray-600 pb-2">Ustawienia Wyświetlania</h2>
+            <div id="settingsContent" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2"></div>
+            <div class="mt-6 flex justify-end">
+                <!-- Zmiana koloru przycisku na głęboki Teal -->
+                <button id="closeSettings" class="px-4 py-2 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition duration-150">
+                    Zapisz i Zamknij
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 2. Custom Confirmation Modal -->
+    <div id="confirmModal" class="modal-bg hidden">
+        <div class="modal rounded-xl shadow-2xl p-6 w-full max-w-sm">
+            <h3 id="modalTitle" class="text-xl font-bold text-red-500 mb-2">Potwierdzenie</h3>
+            <p id="modalMessage" class="text-gray-300 mb-4 text-sm"></p>
+            <div class="flex justify-end space-x-3 pt-3 border-t border-gray-700">
+                <button id="cancelBtn" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-150">Anuluj</button>
+                <button id="confirmBtn" class="px-4 py-2 bg-red-700 text-white rounded-lg font-semibold hover:bg-red-800 transition duration-150">Potwierdź</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 3. Message box for notifications -->
+    <div id="messageBox" class="fixed bottom-0 inset-x-0 p-4 transition-all duration-300 transform translate-y-full max-w-md mx-auto z-40 pointer-events-none">
+        <!-- Messages appear here -->
     </div>
 
-    <button id="clearStorage" class="mt-6 w-full px-4 py-2 bg-red-600 text-white rounded-lg">Wyczyść dane</button>
-  </div>
 
-  <div id="settingsModal" class="modal-bg hidden">
-    <div class="modal">
-      <h2 class="text-lg font-bold mb-2">Ustawienia wyświetlania</h2>
-      <div id="settingsContent" class="space-y-2"></div>
-      <div class="mt-4 flex justify-end">
-        <button id="closeSettings" class="px-3 py-2 bg-gray-600 text-white rounded">Zamknij</button>
-      </div>
-    </div>
-  </div>
+    <!-- Logika aplikacji (Local Storage) -->
+    <script>
+        // --- KONFIGURACJA DANYCH ---
+        const locations = ["Bar 0","Bar 2","Gold","Bar Alkoholowy","Pomieszczenie koordynatorskie"];
+        const items = [
+            "Eisberg Sauvignon Blanc","Ferejean","Jean de la fontane","Val d oca Prosecco Brut","Solaris Białe Skały",
+            "Twin Vines Verde","Crama Regala Chardonnay","Hugel","Solaris X","Lipowiec","Malborough Sun",
+            "Szlachetny Zbiór turnau","Purcari Freedom Blend","Vinaria Din Vale Feteasca Neagra","Almarosa Primitivo",
+            "The Gaucho","Finca Museum Crianza","Kendermann Pinot Noir","Sexton","Soutern Comfort","Famous Grouse",
+            "Famous Grouse Ruby","Loch Lomond Original Single Malt","Glen Moray 12yo","Bushmills 10yo","Bushmills","Evan Williams",
+            "Buffalo Trace Bourbon","Gautier VS Cognac","Soberano Reserva 5YO","Jose Cuervo Reposado Gold","Jose Cuervo Silver",
+            "Kraken","Negrita White","Porto LBV Grahams","Gunpowder","Gibson's London Dry","J.A Baczewski Monopolowa",
+            "J.A Baczewski Morelówka","J.A Baczewski Wiśniówka","Krupnik Cappucino","Krupnik pistacja","Bottega Fior de Latte",
+            "Bottega Bitter","Carolans","Martini Bianco","Cydr","Żywiec","Heineken","Iquana","Trybunał Export",
+            "Trybunał 0%","Trybunał 0% Lemon", "PINTA MODERN DRINKING","PINTA MINI MAXI","Pinta Kwas MY","Pinta Hazy Moring","Solaris Turnau"
+        ];
 
-  <script>
-    const locations = ["Bar 0","Bar 2","Gold","Bar Alkoholowy","Pomieszczenie koordynatorskie"];
-    const items = [
-      "Eisberg Sauvignon Blanc","Ferejean","Jean de la fontane","Val d oca Prosecco Brut","Solaris Białe Skały",
-      "Twin Vines Verde","Crama Regala Chardonnay","Hugel","Solaris X","Lipowiec","Malborough Sun",
-      "Szlachetny Zbiór turnau","Purcari Freedom Blend","Vinaria Din Vale Feteasca Neagra","Almarosa Primitivo",
-      "The Gaucho","Finca Museum Crianza","Kendermann Pinot Noir","Sexton","Soutern Comfort","Famous Grouse",
-      "Famous Grouse Ruby","Loch Lomond Original Single Malt","Glen Moray 12yo","Bushmills 10yo","Bushmills","Evan Williams",
-      "Buffalo Trace Bourbon","Gautier VS Cognac","Soberano Reserva 5YO","Jose Cuervo Reposado Gold","Jose Cuervo Silver",
-      "Kraken","Negrita White","Porto LBV Grahams","Gunpowder","Gibson's London Dry","J.A Baczewski Monopolowa",
-      "J.A Baczewski Morelówka","J.A Baczewski Wiśniówka","Krupnik Cappucino","Krupnik pistacja","Bottega Fior de Latte",
-      "Bottega Bitter","Carolans","Martini Bianco","Cydr","Żywiec","Heineken","Iquana","Trybunał Export",
-      "Trybunał 0%","Trybunał 0% Lemon", "PINTA MODERN DRINKING","PINTA MINI MAXI","Pinta Kwas MY","Pinta Hazy Moring","Solaris Turnau"
-    ];
-
-    let data = JSON.parse(localStorage.getItem("alcoData")) || {};
-    let settings = JSON.parse(localStorage.getItem("alcoSettings")) || {};
-
-    function saveData() { localStorage.setItem("alcoData", JSON.stringify(data)); }
-    function saveSettings() { localStorage.setItem("alcoSettings", JSON.stringify(settings)); renderAccordion(); }
-
-    function updateTotal() {
-      const tbody = document.getElementById('total-tbody');
-      tbody.innerHTML = '';
-      items.forEach(item => {
-        let sum = 0;
-        locations.forEach(loc => { sum += (data[loc]?.[item] || 0); });
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td class=\"px-3 py-2 text-sm\">${item}</td><td class=\"px-3 py-2 text-sm text-right\">${sum}</td>`;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function togglePanel(id) {
-      const panel = document.getElementById(id);
-      if(panel) panel.classList.toggle('hidden');
-    }
-
-    function renderAccordion() {
-      const accordion = document.getElementById('accordion');
-      accordion.innerHTML = '';
-      locations.forEach((loc,i)=>{
-        if(!data[loc]) data[loc]={};
-        if(!Array.isArray(settings[loc])) settings[loc] = [...items];
-        const itemId = `loc-${i}`;
-        const section = document.createElement('div');
-        section.className = 'py-1';
-        section.innerHTML = `<h2><button type=\"button\" class=\"flex w-full items-center justify-between p-3 text-left font-medium\">${loc}</button></h2><div id=\"${itemId}\" class=\"hidden p-2\"><ul class=\"space-y-2\"></ul></div>`;
-        accordion.appendChild(section);
-        const list = section.querySelector('ul');
-        items.forEach((item,j)=>{
-          if(!Array.isArray(settings[loc]) || !settings[loc].includes(item)) return;
-          if(typeof data[loc][item]!=='number') data[loc][item]=0;
-          const inputId = `q-${i}-${j}`;
-          const li = document.createElement('li');
-          li.className = 'item-row flex items-center justify-between';
-          li.innerHTML = `<span class=\"item-name text-sm\">${item}</span><div class=\"relative flex items-center max-w-[8rem]\"><button type=\"button\" data-dec=\"${inputId}\" class=\"dec-btn bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-s-lg p-3 h-11\">-</button><input type=\"text\" id=\"${inputId}\" class=\"counter-input bg-gray-50 border-x-0 border-gray-300 h-11 text-center w-16\" value=\"${data[loc][item]}\"><button type=\"button\" data-inc=\"${inputId}\" class=\"inc-btn bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-e-lg p-3 h-11\">+</button></div>`;
-          const decBtn = li.querySelector(`[data-dec=\"${inputId}\"]`);
-          const incBtn = li.querySelector(`[data-inc=\"${inputId}\"]`);
-          const inputEl = li.querySelector('input');
-          decBtn.addEventListener('click',()=>{inputEl.value=Math.max(0,(parseInt(inputEl.value)||0)-1);data[loc][item]=parseInt(inputEl.value)||0;saveData();updateTotal();});
-          incBtn.addEventListener('click',()=>{inputEl.value=(parseInt(inputEl.value)||0)+1;data[loc][item]=parseInt(inputEl.value)||0;saveData();updateTotal();});
-          inputEl.addEventListener('input',()=>{inputEl.value=Math.max(0,parseInt(inputEl.value)||0);data[loc][item]=parseInt(inputEl.value)||0;saveData();updateTotal();});
-          list.appendChild(li);
-        });
-        section.querySelector('button').addEventListener('click',()=>togglePanel(itemId));
-      });
-      updateTotal();
-    }
-
-    document.addEventListener('DOMContentLoaded',()=>{renderAccordion();});
-
-    document.getElementById('clearStorage').addEventListener('click',()=>{localStorage.removeItem('alcoData');data={};renderAccordion();});
-
-    document.getElementById('copyNumbers').addEventListener('click',()=>{
-      const numbers = Array.from(document.querySelectorAll('#total-tbody td:nth-child(2)')).map(td=>td.textContent);
-      const csv = numbers.join('\n');
-      const textarea = document.createElement('textarea');
-      textarea.value = csv;
-      document.body.appendChild(textarea);
-      textarea.select();
-      try { document.execCommand('copy'); alert('Skopiowano liczby do Excela'); } catch(e){ alert('Skopiuj ręcznie: ' + csv); }
-      document.body.removeChild(textarea);
-    });
-
-    // Settings modal logic
-    const modal = document.getElementById('settingsModal');
-    const settingsContent = document.getElementById('settingsContent');
-    document.getElementById('openSettings').addEventListener('click',()=>{
-      settingsContent.innerHTML = '';
-      locations.forEach(loc=>{
-        if(!Array.isArray(settings[loc])) settings[loc] = [...items];
-        const locDiv = document.createElement('div');
-        locDiv.innerHTML = `<strong>${loc}</strong>`;
-        items.forEach(item=>{
-          const id = `chk-${loc}-${item}`;
-          const checked = settings[loc].includes(item) ? 'checked' : '';
-          const cb = document.createElement('div');
-          cb.innerHTML = `<label><input type=\"checkbox\" id=\"${id}\" ${checked}/> ${item}</label>`;
-          locDiv.appendChild(cb);
-          cb.querySelector('input').addEventListener('change',(e)=>{
-            if(e.target.checked){
-              if(!settings[loc].includes(item)) settings[loc].push(item);
-            } else {
-              settings[loc] = settings[loc].filter(it=>it!==item);
+        let data = JSON.parse(localStorage.getItem("alcoData")) || {};
+        let settings = JSON.parse(localStorage.getItem("alcoSettings")) || {};
+        
+        // --- FUNKCJE UTILITY ---
+        
+        /**
+         * Wyświetla niestandardowy komunikat (zastępuje alert()).
+         */
+        function showMessage(message, type = 'info') {
+            const box = document.getElementById('messageBox');
+            // Kolory notyfikacji: Info (Cyjan), Success (Szmaragdowy), Error (Czerwony)
+            let bgColor = 'bg-cyan-700';
+            let icon = `<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25 4.5-4.5m0 0-4.5-4.5m4.5 4.5h-8.25m-3.75 0a1.5 1.5 0 0 1-3 0 1.5 1.5 0 0 1 3 0Z" /></svg>`;
+            
+            if (type === 'success') {
+                bgColor = 'bg-emerald-600'; 
+                icon = `<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>`;
+            } else if (type === 'error') {
+                bgColor = 'bg-red-700'; 
+                icon = `<svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.375c.83 1.961 2.507 3.447 4.583 3.567 2.072.12 4.148-.098 6.077-.677.334-.1.666-.192.998-.284.576-.153 1.157-.278 1.74-.383M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18Z" /></svg>`;
             }
-            saveSettings();
-          });
-        });
-        settingsContent.appendChild(locDiv);
-      });
-      modal.classList.remove('hidden');
-    });
 
-    document.getElementById('closeSettings').addEventListener('click',()=>{modal.classList.add('hidden');});
-  </script>
+            box.innerHTML = `
+                <div class="rounded-lg ${bgColor} text-white p-3 shadow-2xl flex items-center space-x-3 transition duration-300 ease-out">
+                    ${icon}
+                    <p class="font-medium text-sm">${message}</p>
+                </div>
+            `;
+            box.classList.remove('translate-y-full');
+            box.classList.add('translate-y-0');
+
+            setTimeout(() => {
+                box.classList.remove('translate-y-0');
+                box.classList.add('translate-y-full');
+            }, 3000);
+        }
+
+        /**
+         * Pokazuje niestandardowy modal potwierdzenia (zastępuje confirm()).
+         */
+        function showConfirmationModal(title, message, callback) {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            
+            const confirmBtn = document.getElementById('confirmBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+
+            const handleConfirm = () => {
+                modal.classList.add('hidden');
+                callback();
+                confirmBtn.removeEventListener('click', handleConfirm);
+                cancelBtn.removeEventListener('click', handleCancel);
+            };
+
+            const handleCancel = () => {
+                modal.classList.add('hidden');
+                confirmBtn.removeEventListener('click', handleConfirm);
+                cancelBtn.removeEventListener('click', handleCancel);
+            };
+
+            confirmBtn.addEventListener('click', handleConfirm);
+            cancelBtn.addEventListener('click', handleCancel);
+
+            modal.classList.remove('hidden');
+        }
+
+        // --- FUNKCJE DANYCH ---
+
+        function saveData() { 
+            localStorage.setItem("alcoData", JSON.stringify(data)); 
+            updateTotal(); // Aktualizuj sumę po zapisie danych
+        }
+        
+        function saveSettings() { 
+            localStorage.setItem("alcoSettings", JSON.stringify(settings)); 
+            renderAccordion(); // Przerenderuj akordeon, aby odzwierciedlić zmiany
+            showMessage("Zapisano ustawienia wyświetlania.", 'success');
+        }
+
+        function updateTotal() {
+            const tbody = document.getElementById('total-tbody');
+            tbody.innerHTML = '';
+            items.forEach(item => {
+                let sum = 0;
+                locations.forEach(loc => { sum += (data[loc]?.[item] || 0); });
+                
+                // Zmiana koloru sumy na Błękitny
+                const totalTextClass = sum > 0 ? 'text-blue-300 font-bold' : 'text-gray-500';
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-700/50 transition duration-150';
+                tr.innerHTML = `<td class="px-3 py-2 text-sm text-gray-300">${item}</td><td class="px-3 py-2 text-sm text-right ${totalTextClass}">${sum}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function togglePanel(id) {
+            const panel = document.getElementById(id);
+            const button = document.querySelector(`[data-panel-id="${id}"]`);
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                button.querySelector('svg').classList.remove('rotate-0');
+                button.querySelector('svg').classList.add('rotate-180');
+            } else {
+                panel.classList.add('hidden');
+                button.querySelector('svg').classList.remove('rotate-180');
+                button.querySelector('svg').classList.add('rotate-0');
+            }
+        }
+
+        function renderAccordion() {
+            const accordion = document.getElementById('accordion');
+            accordion.innerHTML = '';
+            
+            locations.forEach((loc, i) => {
+                // Inicjalizacja danych i ustawień
+                if (!data[loc]) data[loc] = {};
+                if (!Array.isArray(settings[loc])) settings[loc] = [...items]; // Domyślnie wszystkie widoczne
+
+                const panelId = `loc-panel-${i}`;
+                const section = document.createElement('div');
+                section.className = 'py-0';
+                
+                // Ulepszony Nagłówek Akordeonu (Blue accent)
+                section.innerHTML = `
+                    <h2 class="shadow-lg">
+                        <button type="button" 
+                                class="accordion-header flex w-full items-center justify-between p-4 text-left font-bold text-white rounded-t-lg"
+                                data-panel-id="${panelId}"
+                                onclick="togglePanel('${panelId}')">
+                            <span class="text-lg">${loc}</span>
+                            <svg class="w-6 h-6 text-blue-500 rotate-0 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                        </button>
+                    </h2>
+                    <div id="${panelId}" class="hidden p-4 bg-gray-800/80 rounded-b-lg">
+                        <ul class="space-y-1"></ul>
+                    </div>
+                `;
+                accordion.appendChild(section);
+
+                const list = section.querySelector('ul');
+                
+                // Renderowanie elementów w akordeonie
+                items.forEach((item, j) => {
+                    // Sprawdzenie czy element jest aktywny w tej lokalizacji (Ustawienia)
+                    if (!settings[loc].includes(item)) return; 
+                    
+                    if (typeof data[loc][item] !== 'number') data[loc][item] = 0;
+                    
+                    const inputId = `q-${i}-${j}`;
+                    const currentCount = data[loc][item];
+                    
+                    const li = document.createElement('li');
+                    li.className = 'item-row flex items-center justify-between';
+                    
+                    // Nowoczesna Kontrolka Licznika (High Contrast Red/Green)
+                    li.innerHTML = `
+                        <span class="item-name text-sm font-medium text-gray-300">${item}</span>
+                        <div class="relative flex items-center max-w-[9rem] h-11">
+                            <!-- Bardziej kontrastowa czerwień -->
+                            <button type="button" data-dec="${inputId}" class="count-btn bg-red-600 hover:bg-red-700 text-white rounded-l-lg p-3 h-full">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" /></svg>
+                            </button>
+                            <input type="text" id="${inputId}" 
+                                   class="counter-input bg-gray-900 border-y-2 border-gray-700 h-full w-14 focus:border-blue-500" 
+                                   value="${currentCount}" 
+                                   inputmode="numeric" 
+                                   pattern="[0-9]*">
+                            <!-- Bardziej kontrastowa zieleń -->
+                            <button type="button" data-inc="${inputId}" class="count-btn bg-emerald-500 hover:bg-emerald-600 text-white rounded-r-lg p-3 h-full">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            </button>
+                        </div>
+                    `;
+                    
+                    const inputEl = li.querySelector('input');
+                    
+                    // Logika aktualizacji licznika
+                    const updateValue = (newValue) => {
+                        const val = Math.max(0, parseInt(newValue) || 0);
+                        inputEl.value = val;
+                        data[loc][item] = val;
+                        saveData();
+                    };
+
+                    // Event Listeners (kliknięcia i wpisywanie)
+                    li.querySelector(`[data-dec="${inputId}"]`).addEventListener('click', () => updateValue(data[loc][item] - 1));
+                    li.querySelector(`[data-inc="${inputId}"]`).addEventListener('click', () => updateValue(data[loc][item] + 1));
+                    inputEl.addEventListener('input', () => updateValue(inputEl.value.replace(/[^0-9]/g, '')));
+                    
+                    list.appendChild(li);
+                });
+                
+                // Dodaj padding na dole, jeśli panel ma elementy
+                if(list.children.length > 0) {
+                     section.querySelector(`#${panelId}`).classList.add('pb-4');
+                } else {
+                     section.querySelector(`#${panelId}`).innerHTML = '<p class="text-gray-500 text-center py-2">Brak aktywnych produktów w tej lokalizacji. Zmień ustawienia.</p>';
+                }
+            });
+
+            updateTotal();
+        }
+
+        // --- OBSŁUGA ZDARZEŃ GŁÓWNA ---
+        
+        document.addEventListener('DOMContentLoaded', () => { 
+            renderAccordion(); 
+        });
+
+        // Wyczyść dane
+        document.getElementById('clearStorageBtn').addEventListener('click', () => {
+             showConfirmationModal(
+                "Ostateczne Potwierdzenie",
+                "UWAGA! Czy na pewno chcesz usunąć WSZYSTKIE dane inwentaryzacji z pamięci lokalnej? Tej operacji nie można cofnąć!",
+                () => {
+                    localStorage.removeItem('alcoData');
+                    data = {};
+                    localStorage.removeItem('alcoSettings');
+                    settings = {};
+                    renderAccordion();
+                    showMessage("Wszystkie dane zostały wyczyszczone.", 'error');
+                }
+            );
+        });
+
+        // Kopiuj do schowka (z uwzględnieniem ograniczeń iframe)
+        document.getElementById('copyNumbers').addEventListener('click', async () => {
+            const numbers = items.map(item => {
+                let sum = 0;
+                locations.forEach(loc => { sum += (data[loc]?.[item] || 0); });
+                return sum;
+            });
+            
+            // Formatowanie nagłówków i danych dla Excela/CSV
+            const headers = items.join('\t');
+            const csv = headers + '\n' + numbers.join('\t');
+
+            try {
+                // Próba użycia nowoczesnego API
+                await navigator.clipboard.writeText(csv);
+                showMessage('Skopiowano dane do schowka (format: CSV/Tabela).', 'success');
+            } catch (err) {
+                // Fallback dla starszych przeglądarek lub środowisk (np. iframe)
+                const textarea = document.createElement('textarea');
+                textarea.value = csv;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showMessage('Skopiowano dane do schowka (fallback).', 'success');
+                } catch (e) {
+                    showMessage('Błąd kopiowania. Skopiuj ręcznie: ' + csv, 'error');
+                }
+                document.body.removeChild(textarea);
+            }
+        });
+
+        // --- LOGIKA MODALA USTAWIEŃ ---
+
+        const settingsModal = document.getElementById('settingsModal');
+        const settingsContent = document.getElementById('settingsContent');
+        
+        document.getElementById('openSettings').addEventListener('click', () => {
+            settingsContent.innerHTML = '';
+            
+            locations.forEach((loc, i) => {
+                if(!Array.isArray(settings[loc])) settings[loc] = [...items];
+                
+                const locDiv = document.createElement('div');
+                locDiv.className = 'p-3 bg-gray-700 rounded-lg border border-gray-600';
+                // Zmiana koloru nagłówka ustawień na Błękit Królewski
+                locDiv.innerHTML = `<h4 class="text-lg font-bold text-blue-500 mb-2">${loc}</h4>`;
+                
+                const listDiv = document.createElement('div');
+                listDiv.className = 'grid grid-cols-2 gap-2 text-sm max-h-48 overflow-y-auto pr-2';
+
+                items.forEach(item => {
+                    const id = `chk-${loc.replace(/\s/g, '-')}-${item.replace(/\s/g, '-')}`;
+                    const checked = settings[loc].includes(item) ? 'checked' : '';
+                    
+                    const cbContainer = document.createElement('div');
+                    cbContainer.className = 'flex items-center space-x-2';
+                    cbContainer.innerHTML = `
+                        <!-- Zmiana koloru checkboxa na Błękit Królewski -->
+                        <input type="checkbox" id="${id}" ${checked} class="shrink-0 border-gray-500 rounded text-blue-500 bg-gray-800 focus:ring-blue-500">
+                        <label for="${id}" class="text-gray-300 cursor-pointer">${item}</label>
+                    `;
+                    
+                    // Logika zmiany ustawień w locDiv, ale bez natychmiastowego zapisu (dopiero po kliknięciu "Zapisz i Zamknij")
+                    cbContainer.querySelector('input').addEventListener('change', (e) => {
+                        if (e.target.checked) {
+                            if (!settings[loc].includes(item)) settings[loc].push(item);
+                        } else {
+                            settings[loc] = settings[loc].filter(it => it !== item);
+                        }
+                    });
+                    
+                    listDiv.appendChild(cbContainer);
+                });
+                
+                locDiv.appendChild(listDiv);
+                settingsContent.appendChild(locDiv);
+            });
+            
+            settingsModal.classList.remove('hidden');
+        });
+
+        document.getElementById('closeSettings').addEventListener('click', () => {
+            saveSettings();
+            settingsModal.classList.add('hidden');
+        });
+    </script>
 </body>
 </html>
-
